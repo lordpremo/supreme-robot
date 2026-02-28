@@ -7,78 +7,63 @@ const {
 const P = require('pino');
 const path = require('path');
 
-const { handleMessage } = require('./handler');
-
-let sock;
-let authStateGlobal;
-let saveCredsGlobal;
-
-const BOT_NAME = 'BROKEN LORD CMD';
-const PREFIX = '.';
+let mainSock;
+let authState;
+let saveCreds;
 
 async function initBot() {
-  const { state, saveCreds } = await useMultiFileAuthState(
-    path.join(__dirname, '..', 'auth')
-  );
-  authStateGlobal = state;
-  saveCredsGlobal = saveCreds;
+  const auth = await useMultiFileAuthState(path.join(__dirname, '..', 'auth'));
+  authState = auth.state;
+  saveCreds = auth.saveCreds;
 
-  sock = makeWASocket({
+  mainSock = makeWASocket({
+    auth: authState,
     printQRInTerminal: true,
-    auth: state,
     logger: P({ level: 'silent' }),
     browser: ['BROKEN LORD CMD', 'Chrome', '1.0.0']
   });
 
-  sock.ev.on('creds.update', saveCreds);
+  mainSock.ev.on('creds.update', saveCreds);
 
-  sock.ev.on('connection.update', (update) => {
+  mainSock.ev.on('connection.update', (update) => {
     const { connection, lastDisconnect } = update;
+
     if (connection === 'close') {
       const shouldReconnect =
         lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-      console.log('Connection closed. Reconnect:', shouldReconnect);
-      if (shouldReconnect) {
-        initBot();
-      }
-    } else if (connection === 'open') {
-      console.log('✅ BROKEN LORD CMD connected');
+      if (shouldReconnect) initBot();
+    }
+
+    if (connection === 'open') {
+      console.log('BOT CONNECTED SUCCESSFULLY');
     }
   });
 
-  sock.ev.on('messages.upsert', async (m) => {
-    const msg = m.messages[0];
-    if (!msg.message || msg.key.fromMe) return;
-    try {
-      await handleMessage(sock, msg, { prefix: PREFIX, botName: BOT_NAME });
-    } catch (err) {
-      console.error('Handle message error:', err);
-    }
-  });
-
-  return sock;
+  return mainSock;
 }
 
-// Request pairing code for a phone number
+// FIXED PAIR CODE GENERATOR
 async function requestPairCode(phone) {
-  if (!authStateGlobal) {
-    throw new Error('Bot not initialized yet');
-  }
+  const clean = phone.replace(/[^0-9]/g, '');
 
-  // Create a temporary socket only for pairing
+  const { state, saveCreds } = await useMultiFileAuthState(
+    path.join(__dirname, '..', 'pairing')
+  );
+
   const tempSock = makeWASocket({
-    auth: authStateGlobal,
+    auth: state,
     logger: P({ level: 'silent' }),
-    browser: ['BROKEN LORD CMD Pair', 'Chrome', '1.0.0']
+    browser: ['BROKEN LORD CMD PAIR', 'Chrome', '1.0.0']
   });
 
+  tempSock.ev.on('creds.update', saveCreds);
+
   if (!tempSock.requestPairingCode) {
-    throw new Error('Pairing not supported in this Baileys version');
+    throw new Error('Pairing not supported on this version');
   }
 
-  const cleanPhone = phone.replace(/[^0-9]/g, '');
-  const code = await tempSock.requestPairingCode(cleanPhone);
-  console.log('Generated pair code for', cleanPhone, ':', code);
+  const code = await tempSock.requestPairingCode(clean);
+  console.log('PAIR CODE:', code);
   return code;
 }
 
