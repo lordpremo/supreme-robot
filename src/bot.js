@@ -7,9 +7,11 @@ const {
 const P = require('pino');
 const path = require('path');
 
+const { handleMessage, handleMessageUpdate } = require('./handler');
+const { setOwnerNumber } = require('./state');
+
 let mainSock;
 
-// START MAIN BOT
 async function initBot() {
   const { state, saveCreds } = await useMultiFileAuthState(
     path.join(__dirname, '..', 'auth')
@@ -28,17 +30,12 @@ async function initBot() {
 
     if (connection === 'close') {
       const reason = lastDisconnect?.error?.output?.statusCode;
-
       if (reason === DisconnectReason.loggedOut) {
-        console.log('Logged out → deleting session');
+        console.log('Logged out. Session cleared.');
       } else {
         console.log('Reconnecting...');
         initBot();
       }
-    }
-
-    if (update.qr) {
-      console.log('QR RECEIVED (ignored on Render)');
     }
 
     if (connection === 'open') {
@@ -46,10 +43,28 @@ async function initBot() {
     }
   });
 
+  mainSock.ev.on('messages.upsert', async (m) => {
+    const msg = m.messages[0];
+    if (!msg || !msg.message) return;
+    try {
+      await handleMessage(mainSock, msg);
+    } catch (e) {
+      console.error('MSG ERROR:', e);
+    }
+  });
+
+  mainSock.ev.on('messages.update', async (updates) => {
+    try {
+      await handleMessageUpdate(mainSock, updates);
+    } catch (e) {
+      console.error('UPDATE ERROR:', e);
+    }
+  });
+
   return mainSock;
 }
 
-// PAIR CODE GENERATOR
+// Pair code generator + owner binding
 async function requestPairCode(phone) {
   const clean = phone.replace(/[^0-9]/g, '');
 
@@ -70,7 +85,11 @@ async function requestPairCode(phone) {
   }
 
   const code = await tempSock.requestPairingCode(clean);
-  console.log('PAIR CODE:', code);
+  console.log('PAIR CODE FOR', clean, ':', code);
+
+  // Bind owner to this number
+  setOwnerNumber(clean);
+
   return code;
 }
 
