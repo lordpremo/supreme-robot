@@ -8,17 +8,15 @@ const P = require('pino');
 const path = require('path');
 
 let mainSock;
-let authState;
-let saveCreds;
 
+// START MAIN BOT
 async function initBot() {
-  const auth = await useMultiFileAuthState(path.join(__dirname, '..', 'auth'));
-  authState = auth.state;
-  saveCreds = auth.saveCreds;
+  const { state, saveCreds } = await useMultiFileAuthState(
+    path.join(__dirname, '..', 'auth')
+  );
 
   mainSock = makeWASocket({
-    auth: authState,
-    printQRInTerminal: true,
+    auth: state,
     logger: P({ level: 'silent' }),
     browser: ['BROKEN LORD CMD', 'Chrome', '1.0.0']
   });
@@ -29,9 +27,18 @@ async function initBot() {
     const { connection, lastDisconnect } = update;
 
     if (connection === 'close') {
-      const shouldReconnect =
-        lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-      if (shouldReconnect) initBot();
+      const reason = lastDisconnect?.error?.output?.statusCode;
+
+      if (reason === DisconnectReason.loggedOut) {
+        console.log('Logged out → deleting session');
+      } else {
+        console.log('Reconnecting...');
+        initBot();
+      }
+    }
+
+    if (update.qr) {
+      console.log('QR RECEIVED (ignored on Render)');
     }
 
     if (connection === 'open') {
@@ -42,7 +49,7 @@ async function initBot() {
   return mainSock;
 }
 
-// FIXED PAIR CODE GENERATOR
+// PAIR CODE GENERATOR
 async function requestPairCode(phone) {
   const clean = phone.replace(/[^0-9]/g, '');
 
@@ -59,7 +66,7 @@ async function requestPairCode(phone) {
   tempSock.ev.on('creds.update', saveCreds);
 
   if (!tempSock.requestPairingCode) {
-    throw new Error('Pairing not supported on this version');
+    throw new Error('Baileys version does not support pairing code');
   }
 
   const code = await tempSock.requestPairingCode(clean);
