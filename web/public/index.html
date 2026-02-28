@@ -1,0 +1,63 @@
+<!-- web/public/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BROKEN LORD CMD - Pair Your Bot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="bg-overlay"></div>
+  <canvas id="waves"></canvas>
+
+  <main class="container">
+    <header class="hero">
+      <img
+        src="https://upcdn.io/kW2K8mM/raw/uploads/2026/02/17/4j9r7q8N7G-5c9c8c2f-632f-4d7d-b783-9480ad265013.png"
+        alt="BROKEN LORD CMD"
+        class="hero-logo"
+      />
+      <h1>BROKEN LORD CMD</h1>
+      <p>Modern WhatsApp Bot • Pair with your number in seconds.</p>
+    </header>
+
+    <section class="card">
+      <h2>Pair Your WhatsApp</h2>
+      <p class="subtitle">
+        1. Weka namba yako ya WhatsApp (bila +).<br />
+        2. Bonyeza <strong>Get Pair Code</strong>.<br />
+        3. Subiri notification, nenda <strong>Linked Devices</strong> kisha ingiza Pair Code.
+      </p>
+
+      <form id="pair-form">
+        <label for="phone">WhatsApp Number (e.g. 2557XXXXXXXX)</label>
+        <input
+          type="tel"
+          id="phone"
+          name="phone"
+          placeholder="Ingiza namba yako..."
+          required
+        />
+        <button type="submit">Get Pair Code</button>
+      </form>
+
+      <div id="result" class="result hidden">
+        <h3>Your Pair Code</h3>
+        <p id="pair-code"></p>
+        <small>
+          Fungua WhatsApp &gt; Linked Devices &gt; Link a device &gt; Ingiza code hii.
+        </small>
+      </div>
+
+      <div id="error" class="error hidden"></div>
+    </section>
+
+    <footer class="footer">
+      <span>BROKEN LORD CMD • Render Ready • No APIs Required</span>
+    </footer>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+  </html>
