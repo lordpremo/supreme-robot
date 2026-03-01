@@ -5,38 +5,39 @@ const pairCodeEl = document.getElementById('pair-code');
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const phone = document.getElementById('phone').value.trim();
+  let phone = document.getElementById('phone').value.trim().replace(/\s+/g, '');
 
   resultBox.classList.add('hidden');
   errorBox.classList.add('hidden');
   errorBox.textContent = '';
   pairCodeEl.textContent = '';
 
-  if (!phone) {
-    errorBox.textContent = 'Please enter your WhatsApp number.';
+  if (!/^\d{10,15}$/.test(phone)) {
+    errorBox.textContent = 'Invalid phone number format. Tumia 2557XXXXXXXX.';
     errorBox.classList.remove('hidden');
     return;
   }
 
+  pairCodeEl.textContent = 'Please wait...';
+  resultBox.classList.remove('hidden');
+
   try {
-    const res = await fetch('/api/pair', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone })
-    });
-
+    const res = await fetch(`/code?number=${encodeURIComponent(phone)}`);
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to get pair code');
 
-    pairCodeEl.textContent = data.code;
-    resultBox.classList.remove('hidden');
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to get pair code');
+    }
+
+    pairCodeEl.textContent = data.code || 'Unavailable';
   } catch (err) {
-    errorBox.textContent = err.message || 'Something went wrong.';
+    resultBox.classList.add('hidden');
+    errorBox.textContent = err.message || 'Error fetching code';
     errorBox.classList.remove('hidden');
   }
 });
 
-// animated waves
+// waves animation (ile ile ya awali)
 const canvas = document.getElementById('waves');
 const ctx = canvas.getContext('2d');
 
