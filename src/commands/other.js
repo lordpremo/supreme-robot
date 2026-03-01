@@ -14,8 +14,7 @@ async function botstatus(sock, msg, info, reply) {
 async function ping(sock, msg, info, reply) {
   const start = Date.now();
   await reply('Pinging...');
-  const end = Date.now();
-  const ms = end - start;
+  const ms = Date.now() - start;
   await reply(`Pong! ${ms} ms`);
 }
 
