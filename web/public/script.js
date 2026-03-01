@@ -1,4 +1,3 @@
-// web/public/script.js
 const form = document.getElementById('pair-form');
 const resultBox = document.getElementById('result');
 const errorBox = document.getElementById('error');
@@ -27,9 +26,7 @@ form.addEventListener('submit', async (e) => {
     });
 
     const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to get pair code');
-    }
+    if (!res.ok) throw new Error(data.error || 'Failed to get pair code');
 
     pairCodeEl.textContent = data.code;
     resultBox.classList.remove('hidden');
@@ -39,7 +36,7 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
-// Simple animated waves background
+// animated waves
 const canvas = document.getElementById('waves');
 const ctx = canvas.getContext('2d');
 
