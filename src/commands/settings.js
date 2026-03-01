@@ -1,27 +1,25 @@
 // src/commands/settings.js
-const settings = {
-  alwaysonline: false,
-  chatbot: false
-};
+const { getState } = require('../state');
 
 async function getsettings(sock, msg, info, reply) {
+  const s = getState();
   const text = `
-*${info.botName} SETTINGS (Local)*
+*${info.botName} SETTINGS*
 
-• alwaysonline: ${settings.alwaysonline}
-• chatbot: ${settings.chatbot}
+• Owner: ${s.ownerNumber || 'Not set'}
+• antilink: ${s.protections.antilink}
+• antibadword: ${s.protections.antibadword}
+• antidelete: ${s.protections.antidelete}
+• autotyping: ${s.protections.autotyping}
 `.trim();
   await reply(text);
 }
 
 async function resetsetting(sock, msg, info, reply) {
-  settings.alwaysonline = false;
-  settings.chatbot = false;
-  await reply('All settings reset (local memory).');
+  await reply('Resetting settings is not implemented fully yet (owner & protections stay).');
 }
 
 module.exports = {
   getsettings,
-  resetsetting,
-  settings
+  resetsetting
 };
