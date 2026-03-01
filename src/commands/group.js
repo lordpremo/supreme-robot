@@ -1,11 +1,8 @@
 // src/commands/group.js
-// Simple in-memory welcome toggle per group
 const welcomeSettings = {};
 
 async function tagall(sock, msg, info, reply) {
-  if (!info.isGroup) {
-    return reply('This command works only in groups.');
-  }
+  if (!info.isGroup) return reply('This command works only in groups.');
 
   const metadata = await sock.groupMetadata(info.from);
   const participants = metadata.participants || [];
@@ -20,17 +17,13 @@ async function tagall(sock, msg, info, reply) {
 }
 
 async function welcomeToggle(sock, msg, info, reply) {
-  if (!info.isGroup) {
-    return reply('This command works only in groups.');
-  }
+  if (!info.isGroup) return reply('This command works only in groups.');
 
   const current = welcomeSettings[info.from] || false;
   const next = !current;
   welcomeSettings[info.from] = next;
 
-  await reply(
-    `Welcome message is now *${next ? 'ON' : 'OFF'}* for this group. (Local memory only)`
-  );
+  await reply(`Welcome is now *${next ? 'ON' : 'OFF'}* for this group (local memory).`);
 }
 
 module.exports = {
